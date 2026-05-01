@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Calendário Aesthetic</title>
+  <style>
+    :root{
+      --bg: #f6f1eb;
+      --card: rgba(255,255,255,0.55);
+      --card-strong: rgba(255,255,255,0.82);
+      --text: #2f2a26;
+      --muted: #8a7f76;
+      --accent: #d8c2ad;
+      --accent-2: #b89b84;
+      --line: rgba(47,42,38,0.08);
+      --shadow: 0 20px 60px rgba(80, 60, 40, 0.08);
+      --radius-xl: 28px;
+      --radius-lg: 20px;
+      --radius-md: 16px;
+    }
+
+    *{
+      margin:0;
+      padding:0;
+      box-sizing:border-box;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body{
+      min-height:100vh;
+      background:
+        radial-gradient(circle at top left, rgba(255,255,255,0.85), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(216,194,173,0.35), transparent 28%),
+        linear-gradient(135deg, #f7f3ef, #efe6de);
+      color:var(--text);
+      padding:32px;
+    }
+
+    .layout{
+      width:min(1250px, 100%);
+      margin:0 auto;
+      display:grid;
+      grid-template-columns: 1.7fr 0.9fr;
+      gap:24px;
+    }
+
+    .app, .notes-panel{
+      background: var(--card);
+      backdrop-filter: blur(18px);
+      -webkit-backdrop-filter: blur(18px);
+      border:1px solid rgba(255,255,255,0.45);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow);
+      padding: 28px;
+    }
+
+    .topbar{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:20px;
+      flex-wrap:wrap;
+      margin-bottom:24px;
+    }
+
+    .branding h1{
+      font-size: clamp(1.5rem, 2vw, 2.1rem);
+      font-weight: 700;
+      letter-spacing:-0.04em;
+    }
+
+    .branding p{
+      color:var(--muted);
+      margin-top:6px;
+      font-size:0.95rem;
+    }
+
+    .controls{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+      align-items:center;
+    }
+
+    .control-group{
+      display:flex;
+      align-items:center;
+      gap:8px;
+      background: var(--card-strong);
+      border:1px solid var(--line);
+      border-radius: 999px;
+      padding:8px 12px;
+    }
+
+    button, select, input[type="date"], textarea{
+      border:none;
+      outline:none;
+      background:transparent;
+      color:var(--text);
+      font-size:0.95rem;
+    }
+
+    button{
+      cursor:pointer;
+      transition: 0.2s ease;
+    }
+
+    .nav-btn{
+      width:40px;
+      height:40px;
+      border-radius:50%;
+      background: var(--card-strong);
+      border:1px solid var(--line);
+      font-size:1rem;
+    }
+
+    .nav-btn:hover{
+      transform: translateY(-1px);
+      background:#fff;
+    }
+
+    .today-btn, .save-btn, .delete-btn{
+      padding: 11px 16px;
+      border-radius: 999px;
+      font-weight:600;
+    }
+
+    .today-btn, .save-btn{
+      background: var(--text);
+      color: #fff;
+    }
+
+    .delete-btn{
+      background: rgba(47,42,38,0.08);
+      color: var(--text);
+    }
+
+    .calendar-card{
+      background: rgba(255,255,255,0.58);
+      border:1px solid rgba(255,255,255,0.5);
+      border-radius: var(--radius-lg);
+      padding: 20px;
+    }
+
+    .month-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:end;
+      margin-bottom:20px;
+      gap:16px;
+      flex-wrap:wrap;
+    }
+
+    .month-title{
+      font-size: clamp(1.6rem, 2.5vw, 2.5rem);
+      font-weight:700;
+      letter-spacing:-0.05em;
+      text-transform:capitalize;
+    }
+
+    .month-subtitle{
+      color:var(--muted);
+      margin-top:6px;
+      font-size:0.95rem;
+    }
+
+    .weekdays, .days{
+      display:grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap:12px;
+    }
+
+    .weekday{
+      padding: 10px 8px;
+      text-align:center;
+      font-size:0.78rem;
+      text-transform:uppercase;
+      letter-spacing:0.14em;
+      color:var(--muted);
+    }
+
+    .day{
+      min-height:105px;
+      border-radius: var(--radius-md);
+      background: rgba(255,255,255,0.55);
+      border:1px solid var(--line);
+      padding:12px;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      transition: 0.2s ease;
+      position:relative;
+      overflow:hidden;
+      cursor:pointer;
+    }
+
+    .day:hover{
+      transform: translateY(-2px);
+      background: rgba(255,255,255,0.75);
+    }
+
+    .day.other-month{
+      opacity:0.35;
+    }
+
+    .day.today{
+      border-color: rgba(184,155,132,0.45);
+      background: linear-gradient(180deg, rgba(216,194,173,0.35), rgba(255,255,255,0.78));
+    }
+
+    .day.selected{
+      outline: 2px solid var(--accent-2);
+      outline-offset: -2px;
+    }
+
+    .day-number{
+      font-size:0.95rem;
+      font-weight:600;
+    }
+
+    .day-label{
+      font-size:0.72rem;
+      color:var(--muted);
+      margin-top:8px;
+      line-height:1.35;
+      overflow:hidden;
+      display:-webkit-box;
+      -webkit-line-clamp:2;
+      -webkit-box-orient:vertical;
+    }
+
+    .note-dot{
+      width:8px;
+      height:8px;
+      border-radius:50%;
+      background: var(--accent-2);
+      position:absolute;
+      top:12px;
+      right:12px;
+      box-shadow: 0 0 0 6px rgba(184,155,132,0.12);
+    }
+
+    .notes-panel{
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+    }
+
+    .panel-title{
+      font-size:1.4rem;
+      font-weight:700;
+      letter-spacing:-0.04em;
+    }
+
+    .panel-subtitle{
+      color:var(--muted);
+      font-size:0.95rem;
+      margin-top:4px;
+    }
+
+    .date-badge{
+      padding:14px 16px;
+      border-radius:18px;
+      background: var(--card-strong);
+      border:1px solid var(--line);
+      font-weight:600;
+    }
+
+    textarea{
+      width:100%;
+      min-height:260px;
+      resize:none;
+      padding:18px;
+      border-radius:20px;
+      background: rgba(255,255,255,0.75);
+      border:1px solid var(--line);
+      line-height:1.6;
+    }
+
+    .actions{
+      display:flex;
+      gap:12px;
+      flex-wrap:wrap;
+    }
+
+    .helper{
+      color:var(--muted);
+      font-size:0.9rem;
+      line-height:1.5;
+    }
+
+    @media (max-width: 980px){
+      .layout{
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 800px){
+      .day{
+        min-height:82px;
+        padding:10px;
+      }
+
+      .weekdays, .days{
+        gap:8px;
+      }
+    }
+
+    @media (max-width: 560px){
+      body{
+        padding:16px;
+      }
+
+      .app, .notes-panel{
+        padding:18px;
+      }
+
+      .day{
+        min-height:72px;
+      }
+
+      .day-label{
+        display:none;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <main class="app">
+      <div class="topbar">
+        <div class="branding">
+          <h1>Calendário</h1>
+          <p>minimalista, moderno & aesthetic</p>
+        </div>
+
+        <div class="controls">
+          <button class="nav-btn" id="prevMonth">←</button>
+
+          <div class="control-group">
+            <select id="monthSelect"></select>
+            <select id="yearSelect"></select>
+          </div>
+
+          <button class="nav-btn" id="nextMonth">→</button>
+
+          <div class="control-group">
+            <input type="date" id="datePicker" />
+          </div>
+
+          <button class="today-btn" id="todayBtn">Hoje</button>
+        </div>
+      </div>
+
+      <section class="calendar-card">
+        <div class="month-header">
+          <div>
+            <div class="month-title" id="monthTitle"></div>
+            <div class="month-subtitle" id="selectedDateText"></div>
+          </div>
+        </div>
+
+        <div class="weekdays">
+          <div class="weekday">Dom</div>
+          <div class="weekday">Seg</div>
+          <div class="weekday">Ter</div>
+          <div class="weekday">Qua</div>
+          <div class="weekday">Qui</div>
+          <div class="weekday">Sex</div>
+          <div class="weekday">Sáb</div>
+        </div>
+
+        <div class="days" id="calendarDays"></div>
+      </section>
+    </main>
+
+    <aside class="notes-panel">
+      <div>
+        <div class="panel-title">Anotações</div>
+        <div class="panel-subtitle">adicione lembretes, tarefas ou compromissos</div>
+      </div>
+
+      <div class="date-badge" id="noteDateTitle"></div>
+
+      <textarea id="noteInput" placeholder="Escreva sua anotação aqui..."></textarea>
+
+      <div class="actions">
+        <button class="save-btn" id="saveNoteBtn">Salvar anotação</button>
+        <button class="delete-btn" id="deleteNoteBtn">Apagar</button>
+      </div>
+
+      <div class="helper">
+        As anotações ficam salvas automaticamente no seu navegador.  
+        Clique em qualquer dia do calendário para visualizar ou editar.
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    const monthNames = [
+      "Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho",
+      "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"
+    ];
+
+    const today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+    let selectedDate = new Date(today);
+
+    const monthSelect = document.getElementById("monthSelect");
+    const yearSelect = document.getElementById("yearSelect");
+    const monthTitle = document.getElementById("monthTitle");
+    const selectedDateText = document.getElementById("selectedDateText");
+    const calendarDays = document.getElementById("calendarDays");
+    const datePicker = document.getElementById("datePicker");
+
+    const noteDateTitle = document.getElementById("noteDateTitle");
+    const noteInput = document.getElementById("noteInput");
+    const saveNoteBtn = document.getElementById("saveNoteBtn");
+    const deleteNoteBtn = document.getElementById("deleteNoteBtn");
+
+    const STORAGE_KEY = "calendar_notes_aesthetic";
+
+    function getNotes() {
+      return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
+    }
+
+    function saveNotes(notes) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(notes));
+    }
+
+    function formatKey(date) {
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    }
+
+    function formatDateBR(date) {
+      return date.toLocaleDateString("pt-BR", {
+        weekday: "long",
+        day: "2-digit",
+        month: "long",
+        year: "numeric"
+      });
+    }
+
+    function isSameDate(a, b) {
+      return (
+        a.getDate() === b.getDate() &&
+        a.getMonth() === b.getMonth() &&
+        a.getFullYear() === b.getFullYear()
+      );
+    }
+
+    function populateSelectors() {
+      monthNames.forEach((month, index) => {
+        const option = document.createElement("option");
+        option.value = index;
+        option.textContent = month;
+        monthSelect.appendChild(option);
+      });
+
+      for (let year = currentYear - 50; year <= currentYear + 50; year++) {
+        const option = document.createElement("option");
+        option.value = year;
+        option.textContent = year;
+        yearSelect.appendChild(option);
+      }
+    }
+
+    function updateNotePanel() {
+      const notes = getNotes();
+      const key = formatKey(selectedDate);
+      noteDateTitle.textContent = formatDateBR(selectedDate);
+      noteInput.value = notes[key] || "";
+      selectedDateText.textContent = `Data selecionada: ${formatDateBR(selectedDate)}`;
+    }
+
+    function renderCalendar(month, year) {
+      const notes = getNotes();
+      calendarDays.innerHTML = "";
+
+      monthSelect.value = month;
+      yearSelect.value = year;
+      monthTitle.textContent = `${monthNames[month]} ${year}`;
+
+      const firstDay = new Date(year, month, 1).getDay();
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+      const daysInPrevMonth = new Date(year, month, 0).getDate();
+
+      let totalCells = firstDay + daysInMonth;
+      if (totalCells % 7 !== 0) totalCells += 7 - (totalCells % 7);
+
+      for (let i = 0; i < totalCells; i++) {
+        const dayElement = document.createElement("div");
+        dayElement.classList.add("day");
+
+        let date;
+        let isOtherMonth = false;
+
+        if (i < firstDay) {
+          date = new Date(year, month - 1, daysInPrevMonth - firstDay + i + 1);
+          isOtherMonth = true;
+        } else if (i >= firstDay + daysInMonth) {
+          date = new Date(year, month + 1, i - (firstDay + daysInMonth) + 1);
+          isOtherMonth = true;
+        } else {
+          date = new Date(year, month, i - firstDay + 1);
+        }
+
+        const key = formatKey(date);
+        const note = notes[key];
+
+        if (isOtherMonth) dayElement.classList.add("other-month");
+        if (isSameDate(date, today)) dayElement.classList.add("today");
+        if (isSameDate(date, selectedDate)) dayElement.classList.add("selected");
+
+        const number = document.createElement("div");
+        number.classList.add("day-number");
+        number.textContent = date.getDate();
+
+        const label = document.createElement("div");
+        label.classList.add("day-label");
+        label.textContent = note ? note : (isSameDate(date, today) ? "hoje" : "");
+
+        dayElement.appendChild(number);
+        dayElement.appendChild(label);
+
+        if (note && note.trim() !== "") {
+          const dot = document.createElement("div");
+          dot.classList.add("note-dot");
+          dayElement.appendChild(dot);
+        }
+
+        dayElement.addEventListener("click", () => {
+          selectedDate = new Date(date);
+          currentMonth = selectedDate.getMonth();
+          currentYear = selectedDate.getFullYear();
+          datePicker.value = formatKey(selectedDate);
+          updateNotePanel();
+          renderCalendar(currentMonth, currentYear);
+        });
+
+        calendarDays.appendChild(dayElement);
+      }
+
+      updateNotePanel();
+    }
+
+    document.getElementById("prevMonth").addEventListener("click", () => {
+      currentMonth--;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      }
+      renderCalendar(currentMonth, currentYear);
+    });
+
+    document.getElementById("nextMonth").addEventListener("click", () => {
+      currentMonth++;
+      if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      renderCalendar(currentMonth, currentYear);
+    });
+
+    monthSelect.addEventListener("change", (e) => {
+      currentMonth = parseInt(e.target.value);
+      renderCalendar(currentMonth, currentYear);
+    });
+
+    yearSelect.addEventListener("change", (e) => {
+      currentYear = parseInt(e.target.value);
+      renderCalendar(currentMonth, currentYear);
+    });
+
+    document.getElementById("todayBtn").addEventListener("click", () => {
+      selectedDate = new Date();
+      currentMonth = selectedDate.getMonth();
+      currentYear = selectedDate.getFullYear();
+      datePicker.value = formatKey(selectedDate);
+      renderCalendar(currentMonth, currentYear);
+    });
+
+    datePicker.addEventListener("change", (e) => {
+      if (!e.target.value) return;
+      const [year, month, day] = e.target.value.split("-").map(Number);
+      selectedDate = new Date(year, month - 1, day);
+      currentMonth = month - 1;
+      currentYear = year;
+      renderCalendar(currentMonth, currentYear);
+    });
+
+    saveNoteBtn.addEventListener("click", () => {
+      const notes = getNotes();
+      const key = formatKey(selectedDate);
+      const value = noteInput.value.trim();
+
+      if (value) {
+        notes[key] = value;
+      } else {
+        delete notes[key];
+      }
+
+      saveNotes(notes);
+      renderCalendar(currentMonth, currentYear);
+    });
+
+    deleteNoteBtn.addEventListener("click", () => {
+      const notes = getNotes();
+      const key = formatKey(selectedDate);
+      delete notes[key];
+      saveNotes(notes);
+      noteInput.value = "";
+      renderCalendar(currentMonth, currentYear);
+    });
+
+    populateSelectors();
+    datePicker.value = formatKey(today);
+    renderCalendar(currentMonth, currentYear);
+  </script>
+</body>
+</html>
