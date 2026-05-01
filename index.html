@@ -1,12 +1,26 @@
+Sim — dá pra colocar um toggle bem bonito de Light / Dark mode e ainda salvar a preferência no navegador.
+
+Vou te passar a versão já pronta com:
+
+modo claro e escuro
+botão para trocar tema
+preferência salva com localStorage
+calendário com anotações por data
+visual ainda minimalista, moderno e aesthetic
+Código completo com anotações + dark/light mode
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Calendário Aesthetic</title>
   <style>
     :root{
-      --bg: #f6f1eb;
+      --bg-main:
+        radial-gradient(circle at top left, rgba(255,255,255,0.85), transparent 30%),
+        radial-gradient(circle at bottom right, rgba(216,194,173,0.35), transparent 28%),
+        linear-gradient(135deg, #f7f3ef, #efe6de);
+
       --card: rgba(255,255,255,0.55);
       --card-strong: rgba(255,255,255,0.82);
       --text: #2f2a26;
@@ -18,6 +32,32 @@
       --radius-xl: 28px;
       --radius-lg: 20px;
       --radius-md: 16px;
+      --button-main: #2f2a26;
+      --button-main-text: #ffffff;
+      --soft: rgba(47,42,38,0.08);
+      --input-bg: rgba(255,255,255,0.75);
+      --note-dot: #b89b84;
+    }
+
+    html[data-theme="dark"]{
+      --bg-main:
+        radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 25%),
+        radial-gradient(circle at bottom right, rgba(186,152,123,0.10), transparent 25%),
+        linear-gradient(135deg, #121212, #1c1815);
+
+      --card: rgba(28,24,21,0.65);
+      --card-strong: rgba(36,31,27,0.88);
+      --text: #f3ede7;
+      --muted: #b4a79d;
+      --accent: #8f735d;
+      --accent-2: #d0ae92;
+      --line: rgba(255,255,255,0.08);
+      --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
+      --button-main: #f3ede7;
+      --button-main-text: #171311;
+      --soft: rgba(255,255,255,0.08);
+      --input-bg: rgba(255,255,255,0.04);
+      --note-dot: #d0ae92;
     }
 
     *{
@@ -29,12 +69,10 @@
 
     body{
       min-height:100vh;
-      background:
-        radial-gradient(circle at top left, rgba(255,255,255,0.85), transparent 30%),
-        radial-gradient(circle at bottom right, rgba(216,194,173,0.35), transparent 28%),
-        linear-gradient(135deg, #f7f3ef, #efe6de);
+      background: var(--bg-main);
       color:var(--text);
       padding:32px;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     .layout{
@@ -49,10 +87,11 @@
       background: var(--card);
       backdrop-filter: blur(18px);
       -webkit-backdrop-filter: blur(18px);
-      border:1px solid rgba(255,255,255,0.45);
-      border-radius: var(--radius-xl);
+      border:1px solid rgba(255,255,255,0.08);
+      border-radius: 28px;
       box-shadow: var(--shadow);
       padding: 28px;
+      transition: 0.3s ease;
     }
 
     .topbar{
@@ -101,6 +140,10 @@
       font-size:0.95rem;
     }
 
+    select, input[type="date"]{
+      color:var(--text);
+    }
+
     button{
       cursor:pointer;
       transition: 0.2s ease;
@@ -113,33 +156,33 @@
       background: var(--card-strong);
       border:1px solid var(--line);
       font-size:1rem;
+      color:var(--text);
     }
 
     .nav-btn:hover{
       transform: translateY(-1px);
-      background:#fff;
-    }
-
-    .today-btn, .save-btn, .delete-btn{
-      padding: 11px 16px;
-      border-radius: 999px;
-      font-weight:600;
     }
 
     .today-btn, .save-btn{
-      background: var(--text);
-      color: #fff;
+      padding: 11px 16px;
+      border-radius: 999px;
+      font-weight:600;
+      background: var(--button-main);
+      color: var(--button-main-text);
     }
 
-    .delete-btn{
-      background: rgba(47,42,38,0.08);
+    .delete-btn, .theme-btn{
+      padding: 11px 16px;
+      border-radius: 999px;
+      font-weight:600;
+      background: var(--soft);
       color: var(--text);
     }
 
     .calendar-card{
-      background: rgba(255,255,255,0.58);
-      border:1px solid rgba(255,255,255,0.5);
-      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,0.04);
+      border:1px solid var(--line);
+      border-radius: 20px;
       padding: 20px;
     }
 
@@ -182,8 +225,8 @@
 
     .day{
       min-height:105px;
-      border-radius: var(--radius-md);
-      background: rgba(255,255,255,0.55);
+      border-radius: 16px;
+      background: var(--card-strong);
       border:1px solid var(--line);
       padding:12px;
       display:flex;
@@ -197,7 +240,6 @@
 
     .day:hover{
       transform: translateY(-2px);
-      background: rgba(255,255,255,0.75);
     }
 
     .day.other-month{
@@ -206,7 +248,11 @@
 
     .day.today{
       border-color: rgba(184,155,132,0.45);
-      background: linear-gradient(180deg, rgba(216,194,173,0.35), rgba(255,255,255,0.78));
+      background: linear-gradient(180deg, rgba(216,194,173,0.22), var(--card-strong));
+    }
+
+    html[data-theme="dark"] .day.today{
+      background: linear-gradient(180deg, rgba(208,174,146,0.16), var(--card-strong));
     }
 
     .day.selected{
@@ -234,11 +280,11 @@
       width:8px;
       height:8px;
       border-radius:50%;
-      background: var(--accent-2);
+      background: var(--note-dot);
       position:absolute;
       top:12px;
       right:12px;
-      box-shadow: 0 0 0 6px rgba(184,155,132,0.12);
+      box-shadow: 0 0 0 6px rgba(184,155,132,0.10);
     }
 
     .notes-panel{
@@ -273,7 +319,7 @@
       resize:none;
       padding:18px;
       border-radius:20px;
-      background: rgba(255,255,255,0.75);
+      background: var(--input-bg);
       border:1px solid var(--line);
       line-height:1.6;
     }
@@ -336,6 +382,7 @@
         </div>
 
         <div class="controls">
+          <button class="theme-btn" id="themeToggle">🌙 Dark</button>
           <button class="nav-btn" id="prevMonth">←</button>
 
           <div class="control-group">
@@ -391,7 +438,7 @@
       </div>
 
       <div class="helper">
-        As anotações ficam salvas automaticamente no seu navegador.  
+        As anotações e o tema escolhido ficam salvos no seu navegador.
         Clique em qualquer dia do calendário para visualizar ou editar.
       </div>
     </aside>
@@ -420,7 +467,10 @@
     const saveNoteBtn = document.getElementById("saveNoteBtn");
     const deleteNoteBtn = document.getElementById("deleteNoteBtn");
 
+    const themeToggle = document.getElementById("themeToggle");
+
     const STORAGE_KEY = "calendar_notes_aesthetic";
+    const THEME_KEY = "calendar_theme_aesthetic";
 
     function getNotes() {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -546,6 +596,26 @@
       updateNotePanel();
     }
 
+    function applyTheme(theme) {
+      document.documentElement.setAttribute("data-theme", theme);
+      localStorage.setItem(THEME_KEY, theme);
+      themeToggle.textContent = theme === "dark" ? "☀️ Light" : "🌙 Dark";
+    }
+
+    function initTheme() {
+      const savedTheme = localStorage.getItem(THEME_KEY);
+      if (savedTheme) {
+        applyTheme(savedTheme);
+      } else {
+        applyTheme("light");
+      }
+    }
+
+    themeToggle.addEventListener("click", () => {
+      const currentTheme = document.documentElement.getAttribute("data-theme");
+      applyTheme(currentTheme === "dark" ? "light" : "dark");
+    });
+
     document.getElementById("prevMonth").addEventListener("click", () => {
       currentMonth--;
       if (currentMonth < 0) {
@@ -616,6 +686,7 @@
     });
 
     populateSelectors();
+    initTheme();
     datePicker.value = formatKey(today);
     renderCalendar(currentMonth, currentYear);
   </script>
