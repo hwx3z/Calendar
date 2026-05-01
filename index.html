@@ -1,410 +1,664 @@
-Sim — dá pra colocar um toggle bem bonito de Light / Dark mode e ainda salvar a preferência no navegador.
-
-Vou te passar a versão já pronta com:
-
-modo claro e escuro
-botão para trocar tema
-preferência salva com localStorage
-calendário com anotações por data
-visual ainda minimalista, moderno e aesthetic
-Código completo com anotações + dark/light mode
 <!DOCTYPE html>
 <html lang="pt-BR" data-theme="light">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Calendário Aesthetic</title>
+  <title>Calendário Premium</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root{
-      --bg-main:
-        radial-gradient(circle at top left, rgba(255,255,255,0.85), transparent 30%),
-        radial-gradient(circle at bottom right, rgba(216,194,173,0.35), transparent 28%),
-        linear-gradient(135deg, #f7f3ef, #efe6de);
-
-      --card: rgba(255,255,255,0.55);
-      --card-strong: rgba(255,255,255,0.82);
-      --text: #2f2a26;
-      --muted: #8a7f76;
-      --accent: #d8c2ad;
-      --accent-2: #b89b84;
-      --line: rgba(47,42,38,0.08);
-      --shadow: 0 20px 60px rgba(80, 60, 40, 0.08);
-      --radius-xl: 28px;
-      --radius-lg: 20px;
-      --radius-md: 16px;
-      --button-main: #2f2a26;
-      --button-main-text: #ffffff;
-      --soft: rgba(47,42,38,0.08);
-      --input-bg: rgba(255,255,255,0.75);
-      --note-dot: #b89b84;
+      --bg:
+        radial-gradient(circle at 0% 0%, rgba(255,255,255,0.9), transparent 28%),
+        radial-gradient(circle at 100% 100%, rgba(214,190,170,0.35), transparent 25%),
+        linear-gradient(135deg, #f8f4f0 0%, #efe5db 100%);
+      --surface: rgba(255,255,255,0.55);
+      --surface-strong: rgba(255,255,255,0.82);
+      --surface-soft: rgba(255,255,255,0.42);
+      --text: #2a241f;
+      --muted: #8f8278;
+      --line: rgba(42,36,31,0.08);
+      --line-strong: rgba(42,36,31,0.12);
+      --accent: #c7a88f;
+      --accent-2: #b58d71;
+      --accent-soft: rgba(197,168,143,0.18);
+      --shadow: 0 24px 80px rgba(78, 60, 45, 0.10);
+      --shadow-soft: 0 10px 30px rgba(78, 60, 45, 0.06);
+      --input: rgba(255,255,255,0.7);
+      --button: #2a241f;
+      --button-text: #ffffff;
+      --danger: #b96e6e;
+      --success: #6e9b7a;
+      --radius-xl: 32px;
+      --radius-lg: 24px;
+      --radius-md: 18px;
+      --radius-sm: 14px;
     }
 
     html[data-theme="dark"]{
-      --bg-main:
-        radial-gradient(circle at top left, rgba(255,255,255,0.05), transparent 25%),
-        radial-gradient(circle at bottom right, rgba(186,152,123,0.10), transparent 25%),
-        linear-gradient(135deg, #121212, #1c1815);
-
-      --card: rgba(28,24,21,0.65);
-      --card-strong: rgba(36,31,27,0.88);
-      --text: #f3ede7;
-      --muted: #b4a79d;
-      --accent: #8f735d;
-      --accent-2: #d0ae92;
-      --line: rgba(255,255,255,0.08);
-      --shadow: 0 20px 60px rgba(0, 0, 0, 0.28);
-      --button-main: #f3ede7;
-      --button-main-text: #171311;
-      --soft: rgba(255,255,255,0.08);
-      --input-bg: rgba(255,255,255,0.04);
-      --note-dot: #d0ae92;
+      --bg:
+        radial-gradient(circle at 0% 0%, rgba(255,255,255,0.05), transparent 25%),
+        radial-gradient(circle at 100% 100%, rgba(181,141,113,0.10), transparent 20%),
+        linear-gradient(135deg, #0f0f11 0%, #181514 100%);
+      --surface: rgba(24,21,20,0.62);
+      --surface-strong: rgba(30,27,25,0.88);
+      --surface-soft: rgba(255,255,255,0.03);
+      --text: #f5eee8;
+      --muted: #b2a59a;
+      --line: rgba(255,255,255,0.07);
+      --line-strong: rgba(255,255,255,0.10);
+      --accent: #d4ac8f;
+      --accent-2: #e4b996;
+      --accent-soft: rgba(212,172,143,0.12);
+      --shadow: 0 30px 90px rgba(0,0,0,0.34);
+      --shadow-soft: 0 10px 30px rgba(0,0,0,0.22);
+      --input: rgba(255,255,255,0.04);
+      --button: #f5eee8;
+      --button-text: #171312;
+      --danger: #d38c8c;
+      --success: #8fc2a0;
     }
 
     *{
       margin:0;
       padding:0;
       box-sizing:border-box;
-      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    html{
+      scroll-behavior:smooth;
     }
 
     body{
+      font-family:"Inter", sans-serif;
       min-height:100vh;
-      background: var(--bg-main);
+      background: var(--bg);
       color:var(--text);
-      padding:32px;
-      transition: background 0.3s ease, color 0.3s ease;
+      padding:28px;
+      transition: background .35s ease, color .35s ease;
     }
 
-    .layout{
-      width:min(1250px, 100%);
+    .shell{
+      width:min(1320px, 100%);
       margin:0 auto;
       display:grid;
-      grid-template-columns: 1.7fr 0.9fr;
+      grid-template-columns: 1.7fr 0.95fr;
       gap:24px;
     }
 
-    .app, .notes-panel{
-      background: var(--card);
-      backdrop-filter: blur(18px);
-      -webkit-backdrop-filter: blur(18px);
-      border:1px solid rgba(255,255,255,0.08);
-      border-radius: 28px;
-      box-shadow: var(--shadow);
-      padding: 28px;
-      transition: 0.3s ease;
+    .panel{
+      background:var(--surface);
+      border:1px solid var(--line);
+      border-radius:var(--radius-xl);
+      box-shadow:var(--shadow);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      transition:.3s ease;
+    }
+
+    .calendar-panel{
+      padding:28px;
+    }
+
+    .notes-panel{
+      padding:24px;
+      display:flex;
+      flex-direction:column;
+      gap:18px;
+      position:relative;
+      overflow:hidden;
+    }
+
+    .notes-panel::before{
+      content:"";
+      position:absolute;
+      inset:auto -80px -80px auto;
+      width:180px;
+      height:180px;
+      background: radial-gradient(circle, var(--accent-soft), transparent 65%);
+      pointer-events:none;
     }
 
     .topbar{
       display:flex;
       justify-content:space-between;
-      align-items:center;
-      gap:20px;
+      align-items:flex-start;
+      gap:18px;
+      margin-bottom:22px;
       flex-wrap:wrap;
-      margin-bottom:24px;
     }
 
-    .branding h1{
-      font-size: clamp(1.5rem, 2vw, 2.1rem);
-      font-weight: 700;
-      letter-spacing:-0.04em;
+    .brand{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
     }
 
-    .branding p{
+    .eyebrow{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      padding:8px 12px;
+      border-radius:999px;
+      background:var(--surface-soft);
+      border:1px solid var(--line);
       color:var(--muted);
-      margin-top:6px;
-      font-size:0.95rem;
+      font-size:.78rem;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      width:max-content;
+    }
+
+    .brand h1{
+      font-size:clamp(1.7rem, 3vw, 2.4rem);
+      font-weight:800;
+      letter-spacing:-0.06em;
+      line-height:1;
+    }
+
+    .brand p{
+      color:var(--muted);
+      font-size:.98rem;
     }
 
     .controls{
       display:flex;
-      gap:12px;
-      flex-wrap:wrap;
+      gap:10px;
       align-items:center;
+      flex-wrap:wrap;
+      justify-content:flex-end;
     }
 
-    .control-group{
+    .chip, .icon-btn, .primary-btn{
+      border:none;
+      outline:none;
+      color:var(--text);
+      background:var(--surface-strong);
+      border:1px solid var(--line);
+      border-radius:999px;
+      transition:.22s ease;
+      font:inherit;
+    }
+
+    .chip{
       display:flex;
       align-items:center;
       gap:8px;
-      background: var(--card-strong);
-      border:1px solid var(--line);
-      border-radius: 999px;
-      padding:8px 12px;
+      padding:10px 14px;
     }
 
-    button, select, input[type="date"], textarea{
+    .chip select,
+    .chip input{
       border:none;
       outline:none;
       background:transparent;
       color:var(--text);
-      font-size:0.95rem;
+      font:inherit;
     }
 
-    select, input[type="date"]{
-      color:var(--text);
-    }
-
-    button{
+    .icon-btn{
+      width:42px;
+      height:42px;
+      display:grid;
+      place-items:center;
       cursor:pointer;
-      transition: 0.2s ease;
-    }
-
-    .nav-btn{
-      width:40px;
-      height:40px;
-      border-radius:50%;
-      background: var(--card-strong);
-      border:1px solid var(--line);
       font-size:1rem;
-      color:var(--text);
     }
 
-    .nav-btn:hover{
-      transform: translateY(-1px);
+    .icon-btn:hover,
+    .chip:hover{
+      transform:translateY(-1px);
+      box-shadow:var(--shadow-soft);
     }
 
-    .today-btn, .save-btn{
-      padding: 11px 16px;
-      border-radius: 999px;
+    .primary-btn{
+      background:var(--button);
+      color:var(--button-text);
+      padding:11px 16px;
       font-weight:600;
-      background: var(--button-main);
-      color: var(--button-main-text);
+      cursor:pointer;
     }
 
-    .delete-btn, .theme-btn{
-      padding: 11px 16px;
-      border-radius: 999px;
-      font-weight:600;
-      background: var(--soft);
-      color: var(--text);
+    .primary-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:var(--shadow-soft);
     }
 
-    .calendar-card{
-      background: rgba(255,255,255,0.04);
+    .theme-switch{
+      position:relative;
+      width:76px;
+      height:42px;
+      border-radius:999px;
+      background:var(--surface-strong);
       border:1px solid var(--line);
-      border-radius: 20px;
-      padding: 20px;
+      display:flex;
+      align-items:center;
+      padding:4px;
+      cursor:pointer;
+      user-select:none;
+      transition:.28s ease;
     }
 
-    .month-header{
+    .theme-switch-track{
+      position:absolute;
+      inset:0;
+      border-radius:999px;
+    }
+
+    .theme-switch-thumb{
+      width:32px;
+      height:32px;
+      border-radius:50%;
+      background:linear-gradient(180deg, #fff, #f1ebe4);
+      box-shadow:0 8px 20px rgba(0,0,0,.12);
+      transform:translateX(0);
+      transition:.28s cubic-bezier(.2,.8,.2,1);
+      position:relative;
+      z-index:2;
+    }
+
+    html[data-theme="dark"] .theme-switch-thumb{
+      transform:translateX(34px);
+      background:linear-gradient(180deg, #2f2b29, #1d1918);
+      box-shadow:0 8px 20px rgba(0,0,0,.28);
+    }
+
+    .theme-icons{
+      position:absolute;
+      inset:0;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      padding:0 11px;
+      font-size:.9rem;
+      color:var(--muted);
+      pointer-events:none;
+    }
+
+    .calendar-wrap{
+      background:linear-gradient(180deg, var(--surface-soft), transparent);
+      border:1px solid var(--line);
+      border-radius:var(--radius-lg);
+      padding:20px;
+    }
+
+    .calendar-head{
       display:flex;
       justify-content:space-between;
       align-items:end;
-      margin-bottom:20px;
       gap:16px;
+      margin-bottom:18px;
       flex-wrap:wrap;
     }
 
     .month-title{
-      font-size: clamp(1.6rem, 2.5vw, 2.5rem);
-      font-weight:700;
-      letter-spacing:-0.05em;
-      text-transform:capitalize;
+      font-size:clamp(1.8rem, 3vw, 2.7rem);
+      font-weight:800;
+      letter-spacing:-0.06em;
+      line-height:1;
     }
 
-    .month-subtitle{
+    .month-meta{
       color:var(--muted);
-      margin-top:6px;
-      font-size:0.95rem;
+      margin-top:8px;
+      font-size:.95rem;
     }
 
     .weekdays, .days{
       display:grid;
-      grid-template-columns: repeat(7, 1fr);
+      grid-template-columns:repeat(7, 1fr);
       gap:12px;
     }
 
     .weekday{
-      padding: 10px 8px;
       text-align:center;
-      font-size:0.78rem;
-      text-transform:uppercase;
-      letter-spacing:0.14em;
+      padding:8px;
       color:var(--muted);
-    }
-
-    .day{
-      min-height:105px;
-      border-radius: 16px;
-      background: var(--card-strong);
-      border:1px solid var(--line);
-      padding:12px;
-      display:flex;
-      flex-direction:column;
-      justify-content:space-between;
-      transition: 0.2s ease;
-      position:relative;
-      overflow:hidden;
-      cursor:pointer;
-    }
-
-    .day:hover{
-      transform: translateY(-2px);
-    }
-
-    .day.other-month{
-      opacity:0.35;
-    }
-
-    .day.today{
-      border-color: rgba(184,155,132,0.45);
-      background: linear-gradient(180deg, rgba(216,194,173,0.22), var(--card-strong));
-    }
-
-    html[data-theme="dark"] .day.today{
-      background: linear-gradient(180deg, rgba(208,174,146,0.16), var(--card-strong));
-    }
-
-    .day.selected{
-      outline: 2px solid var(--accent-2);
-      outline-offset: -2px;
-    }
-
-    .day-number{
-      font-size:0.95rem;
+      text-transform:uppercase;
+      letter-spacing:.14em;
+      font-size:.74rem;
       font-weight:600;
     }
 
-    .day-label{
-      font-size:0.72rem;
+    .day{
+      min-height:112px;
+      border-radius:18px;
+      border:1px solid var(--line);
+      background:var(--surface-strong);
+      padding:12px;
+      position:relative;
+      display:flex;
+      flex-direction:column;
+      justify-content:space-between;
+      cursor:pointer;
+      transition:transform .18s ease, border-color .2s ease, background .2s ease, box-shadow .2s ease;
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.02);
+      animation:fadeIn .22s ease;
+    }
+
+    .day:hover{
+      transform:translateY(-2px);
+      box-shadow:var(--shadow-soft);
+    }
+
+    .day.other-month{
+      opacity:.35;
+    }
+
+    .day.today{
+      background:
+        linear-gradient(180deg, var(--accent-soft), transparent 110%),
+        var(--surface-strong);
+      border-color:rgba(181,141,113,.35);
+    }
+
+    .day.selected{
+      outline:2px solid var(--accent-2);
+      outline-offset:-2px;
+    }
+
+    .day-top{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+    }
+
+    .day-number{
+      font-size:.95rem;
+      font-weight:700;
+      letter-spacing:-0.03em;
+    }
+
+    .today-pill{
+      font-size:.66rem;
+      padding:4px 8px;
+      border-radius:999px;
+      background:var(--accent-soft);
+      color:var(--accent-2);
+      border:1px solid rgba(181,141,113,.18);
+      font-weight:600;
+    }
+
+    .day-note-preview{
       color:var(--muted);
-      margin-top:8px;
-      line-height:1.35;
+      font-size:.74rem;
+      line-height:1.45;
       overflow:hidden;
       display:-webkit-box;
-      -webkit-line-clamp:2;
+      -webkit-line-clamp:3;
       -webkit-box-orient:vertical;
+      margin-top:10px;
+      white-space:pre-wrap;
+      word-break:break-word;
+    }
+
+    .note-indicator{
+      position:absolute;
+      right:12px;
+      bottom:12px;
+      display:flex;
+      align-items:center;
+      gap:6px;
     }
 
     .note-dot{
       width:8px;
       height:8px;
       border-radius:50%;
-      background: var(--note-dot);
-      position:absolute;
-      top:12px;
-      right:12px;
-      box-shadow: 0 0 0 6px rgba(184,155,132,0.10);
+      background:var(--accent-2);
+      box-shadow:0 0 0 7px var(--accent-soft);
     }
 
-    .notes-panel{
+    .note-mini-line{
+      width:14px;
+      height:2px;
+      border-radius:999px;
+      background:var(--accent-2);
+      opacity:.7;
+    }
+
+    .side-top{
       display:flex;
-      flex-direction:column;
-      gap:18px;
+      align-items:flex-start;
+      justify-content:space-between;
+      gap:16px;
     }
 
-    .panel-title{
-      font-size:1.4rem;
-      font-weight:700;
-      letter-spacing:-0.04em;
+    .side-title h2{
+      font-size:1.45rem;
+      font-weight:800;
+      letter-spacing:-0.05em;
     }
 
-    .panel-subtitle{
+    .side-title p{
       color:var(--muted);
-      font-size:0.95rem;
-      margin-top:4px;
+      margin-top:6px;
+      font-size:.95rem;
+      line-height:1.5;
     }
 
-    .date-badge{
-      padding:14px 16px;
-      border-radius:18px;
-      background: var(--card-strong);
+    .date-card{
+      padding:16px 18px;
+      background:var(--surface-strong);
       border:1px solid var(--line);
+      border-radius:20px;
+    }
+
+    .date-card .label{
+      color:var(--muted);
+      font-size:.78rem;
+      text-transform:uppercase;
+      letter-spacing:.12em;
+      margin-bottom:8px;
       font-weight:600;
     }
 
-    textarea{
-      width:100%;
-      min-height:260px;
-      resize:none;
-      padding:18px;
-      border-radius:20px;
-      background: var(--input-bg);
-      border:1px solid var(--line);
-      line-height:1.6;
+    .date-card .value{
+      font-size:1rem;
+      font-weight:700;
+      line-height:1.45;
     }
 
-    .actions{
+    .editor-wrap{
       display:flex;
+      flex-direction:column;
+      gap:10px;
+    }
+
+    .editor-head{
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
       gap:12px;
       flex-wrap:wrap;
     }
 
-    .helper{
+    .editor-title{
+      font-size:.9rem;
       color:var(--muted);
-      font-size:0.9rem;
-      line-height:1.5;
+      font-weight:600;
+      letter-spacing:.02em;
     }
 
-    @media (max-width: 980px){
-      .layout{
-        grid-template-columns: 1fr;
+    .save-status{
+      font-size:.82rem;
+      color:var(--muted);
+      padding:8px 10px;
+      border-radius:999px;
+      background:var(--surface-soft);
+      border:1px solid var(--line);
+    }
+
+    .save-status.saving{
+      color:var(--accent-2);
+    }
+
+    .save-status.saved{
+      color:var(--success);
+    }
+
+    textarea{
+      width:100%;
+      min-height:300px;
+      border:none;
+      outline:none;
+      resize:none;
+      padding:18px 18px 20px;
+      border-radius:22px;
+      background:var(--input);
+      border:1px solid var(--line);
+      color:var(--text);
+      font:inherit;
+      line-height:1.7;
+      transition:.2s ease;
+    }
+
+    textarea:focus{
+      border-color:rgba(181,141,113,.35);
+      box-shadow:0 0 0 4px var(--accent-soft);
+    }
+
+    .side-actions{
+      display:flex;
+      gap:10px;
+      flex-wrap:wrap;
+    }
+
+    .ghost-btn{
+      border:none;
+      outline:none;
+      padding:11px 14px;
+      border-radius:999px;
+      background:var(--surface-strong);
+      color:var(--text);
+      border:1px solid var(--line);
+      cursor:pointer;
+      font:inherit;
+      font-weight:600;
+      transition:.2s ease;
+    }
+
+    .ghost-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:var(--shadow-soft);
+    }
+
+    .danger-btn{
+      color:var(--danger);
+    }
+
+    .helper{
+      color:var(--muted);
+      font-size:.9rem;
+      line-height:1.6;
+      padding:14px 16px;
+      border-radius:18px;
+      background:var(--surface-soft);
+      border:1px solid var(--line);
+    }
+
+    @keyframes fadeIn{
+      from{opacity:0; transform:translateY(4px);}
+      to{opacity:1; transform:translateY(0);}
+    }
+
+    @media (max-width: 1050px){
+      .shell{
+        grid-template-columns:1fr;
       }
     }
 
-    @media (max-width: 800px){
-      .day{
-        min-height:82px;
-        padding:10px;
+    @media (max-width: 820px){
+      body{
+        padding:16px;
+      }
+
+      .calendar-panel,
+      .notes-panel{
+        padding:18px;
       }
 
       .weekdays, .days{
         gap:8px;
       }
+
+      .day{
+        min-height:88px;
+        border-radius:16px;
+      }
+
+      .day-note-preview{
+        -webkit-line-clamp:2;
+      }
     }
 
     @media (max-width: 560px){
-      body{
-        padding:16px;
+      .controls{
+        width:100%;
+        justify-content:flex-start;
       }
 
-      .app, .notes-panel{
-        padding:18px;
+      .chip{
+        width:100%;
+        justify-content:space-between;
       }
 
       .day{
-        min-height:72px;
+        min-height:74px;
+        padding:10px;
       }
 
-      .day-label{
+      .day-note-preview,
+      .today-pill{
         display:none;
       }
     }
   </style>
 </head>
 <body>
-  <div class="layout">
-    <main class="app">
+  <div class="shell">
+    <main class="panel calendar-panel">
       <div class="topbar">
-        <div class="branding">
+        <div class="brand">
+          <div class="eyebrow">✦ premium calendar</div>
           <h1>Calendário</h1>
-          <p>minimalista, moderno & aesthetic</p>
+          <p>minimalista, elegante e feito para organizar sua rotina com estilo.</p>
         </div>
 
         <div class="controls">
-          <button class="theme-btn" id="themeToggle">🌙 Dark</button>
-          <button class="nav-btn" id="prevMonth">←</button>
+          <div class="theme-switch" id="themeToggle" aria-label="Alternar tema" title="Alternar tema">
+            <div class="theme-switch-track"></div>
+            <div class="theme-icons">
+              <span>☀️</span>
+              <span>🌙</span>
+            </div>
+            <div class="theme-switch-thumb"></div>
+          </div>
 
-          <div class="control-group">
+          <button class="icon-btn" id="prevMonth">←</button>
+
+          <div class="chip">
             <select id="monthSelect"></select>
             <select id="yearSelect"></select>
           </div>
 
-          <button class="nav-btn" id="nextMonth">→</button>
+          <button class="icon-btn" id="nextMonth">→</button>
 
-          <div class="control-group">
+          <div class="chip">
             <input type="date" id="datePicker" />
           </div>
 
-          <button class="today-btn" id="todayBtn">Hoje</button>
+          <button class="primary-btn" id="todayBtn">Hoje</button>
         </div>
       </div>
 
-      <section class="calendar-card">
-        <div class="month-header">
+      <section class="calendar-wrap">
+        <div class="calendar-head">
           <div>
             <div class="month-title" id="monthTitle"></div>
-            <div class="month-subtitle" id="selectedDateText"></div>
+            <div class="month-meta" id="selectedDateText"></div>
           </div>
         </div>
 
@@ -422,24 +676,35 @@ Código completo com anotações + dark/light mode
       </section>
     </main>
 
-    <aside class="notes-panel">
-      <div>
-        <div class="panel-title">Anotações</div>
-        <div class="panel-subtitle">adicione lembretes, tarefas ou compromissos</div>
+    <aside class="panel notes-panel">
+      <div class="side-top">
+        <div class="side-title">
+          <h2>Anotações</h2>
+          <p>Clique em uma data para escrever lembretes, tarefas ou compromissos.</p>
+        </div>
       </div>
 
-      <div class="date-badge" id="noteDateTitle"></div>
+      <div class="date-card">
+        <div class="label">data selecionada</div>
+        <div class="value" id="noteDateTitle"></div>
+      </div>
 
-      <textarea id="noteInput" placeholder="Escreva sua anotação aqui..."></textarea>
+      <div class="editor-wrap">
+        <div class="editor-head">
+          <div class="editor-title">Sua anotação</div>
+          <div class="save-status" id="saveStatus">Pronto</div>
+        </div>
 
-      <div class="actions">
-        <button class="save-btn" id="saveNoteBtn">Salvar anotação</button>
-        <button class="delete-btn" id="deleteNoteBtn">Apagar</button>
+        <textarea id="noteInput" placeholder="Escreva aqui..."></textarea>
+      </div>
+
+      <div class="side-actions">
+        <button class="ghost-btn" id="clearNoteBtn">Limpar texto</button>
+        <button class="ghost-btn danger-btn" id="deleteNoteBtn">Apagar anotação</button>
       </div>
 
       <div class="helper">
-        As anotações e o tema escolhido ficam salvos no seu navegador.
-        Clique em qualquer dia do calendário para visualizar ou editar.
+        Auto-save ativado. Seu texto e o tema escolhido ficam salvos no navegador automaticamente.
       </div>
     </aside>
   </div>
@@ -454,6 +719,10 @@ Código completo com anotações + dark/light mode
     let currentMonth = today.getMonth();
     let currentYear = today.getFullYear();
     let selectedDate = new Date(today);
+    let saveTimer = null;
+
+    const STORAGE_KEY = "premium_calendar_notes";
+    const THEME_KEY = "premium_calendar_theme";
 
     const monthSelect = document.getElementById("monthSelect");
     const yearSelect = document.getElementById("yearSelect");
@@ -462,15 +731,12 @@ Código completo com anotações + dark/light mode
     const calendarDays = document.getElementById("calendarDays");
     const datePicker = document.getElementById("datePicker");
 
+    const themeToggle = document.getElementById("themeToggle");
     const noteDateTitle = document.getElementById("noteDateTitle");
     const noteInput = document.getElementById("noteInput");
-    const saveNoteBtn = document.getElementById("saveNoteBtn");
+    const saveStatus = document.getElementById("saveStatus");
+    const clearNoteBtn = document.getElementById("clearNoteBtn");
     const deleteNoteBtn = document.getElementById("deleteNoteBtn");
-
-    const themeToggle = document.getElementById("themeToggle");
-
-    const STORAGE_KEY = "calendar_notes_aesthetic";
-    const THEME_KEY = "calendar_theme_aesthetic";
 
     function getNotes() {
       return JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
@@ -501,6 +767,12 @@ Código completo com anotações + dark/light mode
       );
     }
 
+    function setStatus(type, text) {
+      saveStatus.className = "save-status";
+      if (type) saveStatus.classList.add(type);
+      saveStatus.textContent = text;
+    }
+
     function populateSelectors() {
       monthNames.forEach((month, index) => {
         const option = document.createElement("option");
@@ -509,7 +781,7 @@ Código completo com anotações + dark/light mode
         monthSelect.appendChild(option);
       });
 
-      for (let year = currentYear - 50; year <= currentYear + 50; year++) {
+      for (let year = today.getFullYear() - 50; year <= today.getFullYear() + 50; year++) {
         const option = document.createElement("option");
         option.value = year;
         option.textContent = year;
@@ -522,13 +794,13 @@ Código completo com anotações + dark/light mode
       const key = formatKey(selectedDate);
       noteDateTitle.textContent = formatDateBR(selectedDate);
       noteInput.value = notes[key] || "";
-      selectedDateText.textContent = `Data selecionada: ${formatDateBR(selectedDate)}`;
+      selectedDateText.textContent = `Selecionado: ${formatDateBR(selectedDate)}`;
+      setStatus("", "Pronto");
     }
 
     function renderCalendar(month, year) {
       const notes = getNotes();
       calendarDays.innerHTML = "";
-
       monthSelect.value = month;
       yearSelect.value = year;
       monthTitle.textContent = `${monthNames[month]} ${year}`;
@@ -564,21 +836,34 @@ Código completo com anotações + dark/light mode
         if (isSameDate(date, today)) dayElement.classList.add("today");
         if (isSameDate(date, selectedDate)) dayElement.classList.add("selected");
 
+        const top = document.createElement("div");
+        top.classList.add("day-top");
+
         const number = document.createElement("div");
         number.classList.add("day-number");
         number.textContent = date.getDate();
 
-        const label = document.createElement("div");
-        label.classList.add("day-label");
-        label.textContent = note ? note : (isSameDate(date, today) ? "hoje" : "");
+        top.appendChild(number);
 
-        dayElement.appendChild(number);
-        dayElement.appendChild(label);
+        if (isSameDate(date, today)) {
+          const todayPill = document.createElement("div");
+          todayPill.classList.add("today-pill");
+          todayPill.textContent = "Hoje";
+          top.appendChild(todayPill);
+        }
+
+        const preview = document.createElement("div");
+        preview.classList.add("day-note-preview");
+        preview.textContent = note ? note : "";
+
+        dayElement.appendChild(top);
+        dayElement.appendChild(preview);
 
         if (note && note.trim() !== "") {
-          const dot = document.createElement("div");
-          dot.classList.add("note-dot");
-          dayElement.appendChild(dot);
+          const indicator = document.createElement("div");
+          indicator.classList.add("note-indicator");
+          indicator.innerHTML = `<span class="note-mini-line"></span><span class="note-dot"></span>`;
+          dayElement.appendChild(indicator);
         }
 
         dayElement.addEventListener("click", () => {
@@ -586,8 +871,8 @@ Código completo com anotações + dark/light mode
           currentMonth = selectedDate.getMonth();
           currentYear = selectedDate.getFullYear();
           datePicker.value = formatKey(selectedDate);
-          updateNotePanel();
           renderCalendar(currentMonth, currentYear);
+          noteInput.focus();
         });
 
         calendarDays.appendChild(dayElement);
@@ -596,10 +881,33 @@ Código completo com anotações + dark/light mode
       updateNotePanel();
     }
 
+    function saveCurrentNote() {
+      const notes = getNotes();
+      const key = formatKey(selectedDate);
+      const value = noteInput.value.trim();
+
+      if (value) {
+        notes[key] = value;
+      } else {
+        delete notes[key];
+      }
+
+      saveNotes(notes);
+      renderCalendar(currentMonth, currentYear);
+      setStatus("saved", "Salvo");
+    }
+
+    function scheduleAutoSave() {
+      setStatus("saving", "Salvando...");
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(() => {
+        saveCurrentNote();
+      }, 500);
+    }
+
     function applyTheme(theme) {
       document.documentElement.setAttribute("data-theme", theme);
       localStorage.setItem(THEME_KEY, theme);
-      themeToggle.textContent = theme === "dark" ? "☀️ Light" : "🌙 Dark";
     }
 
     function initTheme() {
@@ -607,7 +915,8 @@ Código completo com anotações + dark/light mode
       if (savedTheme) {
         applyTheme(savedTheme);
       } else {
-        applyTheme("light");
+        const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+        applyTheme(prefersDark ? "dark" : "light");
       }
     }
 
@@ -661,19 +970,12 @@ Código completo com anotações + dark/light mode
       renderCalendar(currentMonth, currentYear);
     });
 
-    saveNoteBtn.addEventListener("click", () => {
-      const notes = getNotes();
-      const key = formatKey(selectedDate);
-      const value = noteInput.value.trim();
+    noteInput.addEventListener("input", scheduleAutoSave);
 
-      if (value) {
-        notes[key] = value;
-      } else {
-        delete notes[key];
-      }
-
-      saveNotes(notes);
-      renderCalendar(currentMonth, currentYear);
+    clearNoteBtn.addEventListener("click", () => {
+      noteInput.value = "";
+      scheduleAutoSave();
+      noteInput.focus();
     });
 
     deleteNoteBtn.addEventListener("click", () => {
@@ -683,6 +985,7 @@ Código completo com anotações + dark/light mode
       saveNotes(notes);
       noteInput.value = "";
       renderCalendar(currentMonth, currentYear);
+      setStatus("saved", "Anotação apagada");
     });
 
     populateSelectors();
